@@ -2,6 +2,8 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
+using System.Diagnostics.Metrics;
+using System.Text.RegularExpressions;
 
 namespace OnlineShopTests
 {
@@ -22,7 +24,7 @@ namespace OnlineShopTests
         public void CompleteOrderForFrankieSweatshirt()
         {
             NavigatesToMenHoodiesSection_WhenSelectMen_HoodiesAndSweatshirts();
-            ChecksDisplayedNumberOfJackets_WhenPageWasOpened("12");
+            ChecksDisplayedNumberOfJackets_WhenPageWasOpened();
             OpensSelectedProductDescription_WhenSelectProductByName("Frankie Sweatshirt");
             UpdateSizeColorAndQuantitySelection_WhenSelectSizeColorAndQuantity("M", "Green", 1);
             AddProductToCart_WhenSelectToAddProductToCart();
@@ -40,16 +42,12 @@ namespace OnlineShopTests
             TestUtils.WaitForElementToBeClickable(wait, By.LinkText("Hoodies & Sweatshirts")).Click();
         }
 
-        private void ChecksDisplayedNumberOfJackets_WhenPageWasOpened(string selectedNumbers)
+        private void ChecksDisplayedNumberOfJackets_WhenPageWasOpened()
         {
-            var pageSizeDropdown = new SelectElement(driver.FindElement(By.Id("limiter")));
-            pageSizeDropdown.SelectByValue(selectedNumbers);
-            wait.Until(driver =>
-            {
-                var selectedValue = pageSizeDropdown.SelectedOption.GetAttribute("value");
-                return selectedValue == selectedNumbers;
-            });
-            Assert.AreEqual(selectedNumbers, pageSizeDropdown.SelectedOption.GetAttribute("value"), $"The selected value in the dropdown is not '{selectedNumbers}'.");
+            string itemsPerPage = "12";
+            TestUtils.SelectDropdownOption(driver, By.Id("limiter"), itemsPerPage);
+            var displayedNumberOfJackets = TestUtils.GetDisplayedNumberOfJackets(driver);
+            Assert.AreEqual(itemsPerPage, displayedNumberOfJackets, $"The displayed number of jackets '{displayedNumberOfJackets}' does not match the selected number '{itemsPerPage}'.");
         }
 
         private void OpensSelectedProductDescription_WhenSelectProductByName(string productName)
@@ -95,11 +93,8 @@ namespace OnlineShopTests
             TestUtils.WaitForElementToBeClickable(wait, By.Id("top-cart-btn-checkout")).Click();
         }
 
-        private void FillsShippingDetails_WhenCheckoutPageIsOpened(
-    string email, string firstName, string lastName, string street, string streetLine2,
-    string city, string region, string postalCode, string country, string phoneNumber)
+        private void FillsShippingDetails_WhenCheckoutPageIsOpened(string email, string firstName, string lastName, string street, string streetLine2, string city, string region, string postalCode, string country, string phoneNumber)
         {
-            // Helper method to ensure element is visible and clickable
             IWebElement WaitForAndGetElement(By locator)
             {
                 var element = TestUtils.WaitForElementToBeVisible(wait, locator);

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace OnlineShopTests
 {
@@ -37,6 +38,53 @@ namespace OnlineShopTests
             var element = driver.FindElement(locator);
             element.Clear();
             element.SendKeys(value);
+        }
+
+        public static void SelectDropdownOption(IWebDriver driver, By by, string optionText)
+        {
+            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(20));
+            var dropdown = wait.Until(drv => drv.FindElement(by));
+
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView(true);", dropdown);
+
+            try
+            {
+                dropdown.Click();
+            }
+            catch (ElementNotInteractableException)
+            {
+                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", dropdown);
+            }
+
+            var selectElement = new SelectElement(dropdown);
+            if (selectElement.SelectedOption.Text.Trim() != optionText)
+            {
+                try
+                {
+                    selectElement.SelectByText(optionText);
+                }
+                catch (NoSuchElementException)
+                {
+                    throw new NoSuchElementException($"The option '{optionText}' was not found in the dropdown.");
+                }
+            }
+        }
+
+        public static string GetDisplayedNumberOfJackets(IWebDriver driver)
+        {
+            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+            var toolbarAmount = wait.Until(drv => drv.FindElement(By.Id("toolbar-amount")));
+
+            var displayedText = toolbarAmount.Text;
+
+            var match = Regex.Match(displayedText, @"Items (\d+)-(\d+) of \d+");
+
+            if (match.Success)
+            {
+                return match.Groups[2].Value;
+            }
+
+            throw new Exception("Failed to parse the number of displayed items.");
         }
     }
 }
