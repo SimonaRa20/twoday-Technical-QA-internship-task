@@ -25,21 +25,21 @@ namespace OnlineShopTests
             SortPantsByPrice_WhenChangeSortValuePrice();
             SelectCheapestPants_WhenCLickOnFirstPantsOfList();
             TestUtils.AddPantsToCart_WhenClickOnAddToCartButton(wait, driver, "28", "Black", 1);
-            TestUtils.VerifyCartIconUpdated(wait, driver, 1);
+            TestUtils.VerifyCartIconUpdated_WhenClickOnCartIcon(wait, driver, 1);
             TestUtils.OpensSelectedProductDescription_WhenSelectProductByName(wait, "Sylvia Capri");
             TestUtils.AddPantsToCart_WhenClickOnAddToCartButton(wait, driver, "29", "Blue", 1);
-            TestUtils.VerifyCartIconUpdated(wait, driver, 2);
+            TestUtils.VerifyCartIconUpdated_WhenClickOnCartIcon(wait, driver, 2);
             TestUtils.OpensSelectedProductDescription_WhenSelectProductByName(wait, "Emma Leggings");
             TestUtils.AddPantsToCart_WhenClickOnAddToCartButton(wait, driver, "29", "Purple", 1);
-            TestUtils.VerifyCartIconUpdated(wait, driver, 3);
-            RemoveProductFromCart("Sylvia Capri");
-            TestUtils.VerifyCartIconUpdated(wait, driver, 2);
-            ProceedToCheckout();
-            AddProductFromSuggestedProducts();
+            TestUtils.VerifyCartIconUpdated_WhenClickOnCartIcon(wait, driver, 3);
+            RemoveProductFromCart_WhenClickOnTrashIcon();
+            TestUtils.VerifyCartIconUpdated_WhenClickOnCartIcon(wait, driver, 2);
+            ProceedToCheckout_WhenClickOnCheckoutButton();
+            AddProductFromSuggestedProducts_WhenClickOnAddOfFirstSuggestProduct();
             OpensCheckoutPage_WhenProceedToCheckout();
             TestUtils.FillsShippingDetails_WhenCheckoutPageIsOpened(wait, driver, "test@gmail.com", "FirstNameTest", "LastNameTest", "123 Test Street", "Test 4", "TestCity", "California", "12345", "United States", "+3705555555");
             TestUtils.CompletesTheOrder_WhenFilledShippingDetails(wait, driver);
-            TestUtils.GetsSuccessMessage_WhenAssertOrderSuccess(wait);
+            TestUtils.GetsSuccessMessage_WhenAssertOrderSuccess(wait, "The success message is not displayed.");
         }
 
         private void SortPantsByPrice_WhenChangeSortValuePrice()
@@ -64,35 +64,27 @@ namespace OnlineShopTests
             selectProductLink.Click();
         }
 
-        private void RemoveProductFromCart(string itemName)
+        private void RemoveProductFromCart_WhenClickOnTrashIcon()
         {
             var cartIcon = TestUtils.WaitForElementToBeClickable(wait, By.ClassName("minicart-wrapper"));
             cartIcon.Click();
 
             var cartItems = wait.Until(driver => driver.FindElements(By.CssSelector(".item.product.product-item")));
+            var productNameElement = cartItems[0].FindElement(By.CssSelector(".product-item-name a"));
+            var removeButton = cartItems[0].FindElement(By.CssSelector(".action.delete"));
+            removeButton.Click();
 
-            foreach (var item in cartItems)
-            {
-                var productNameElement = item.FindElement(By.CssSelector(".product-item-name a"));
-                if (productNameElement.Text.Equals(itemName, StringComparison.OrdinalIgnoreCase))
-                {
-                    var removeButton = item.FindElement(By.CssSelector(".action.delete"));
-                    removeButton.Click();
-
-                    var confirmButton = TestUtils.WaitForElementToBeClickable(wait, By.CssSelector(".action-primary.action-accept"));
-                    confirmButton.Click();
-                    break;
-                }
-            }
+            var confirmButton = TestUtils.WaitForElementToBeClickable(wait, By.CssSelector(".action-primary.action-accept"));
+            confirmButton.Click();
         }
 
-        private void ProceedToCheckout()
+        private void ProceedToCheckout_WhenClickOnCheckoutButton()
         {
             var checkoutButton = TestUtils.WaitForElementToBeClickable(wait, By.CssSelector(".action.viewcart"));
             checkoutButton.Click();
         }
 
-        private void AddProductFromSuggestedProducts()
+        private void AddProductFromSuggestedProducts_WhenClickOnAddOfFirstSuggestProduct()
         {
             var suggestedProduct = wait.Until(driver => driver.FindElements(By.CssSelector("ol.products.list.items.product-items li.item.product.product-item"))).FirstOrDefault();
             var addToCartButton = suggestedProduct.FindElement(By.CssSelector(".actions-primary .action.tocart"));
