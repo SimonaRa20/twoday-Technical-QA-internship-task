@@ -1,12 +1,8 @@
 ﻿using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium;
 using SeleniumExtras.WaitHelpers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using OpenQA.Selenium.Interactions;
 
 namespace OnlineShopTests
 {
@@ -70,6 +66,46 @@ namespace OnlineShopTests
             }
         }
 
+        public static void NavigatesToSpecificSection_WhenClickOnMenuOptions(WebDriverWait wait, IWebDriver driver, string section1, string section2, string section3)
+        {
+            driver.Navigate().GoToUrl(BaseUrl);
+            IWebElement section1Menu = wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText(section1)));
+            Actions actions = new Actions(driver);
+            actions.MoveToElement(section1Menu).Perform();
+
+            IWebElement section2Menu = wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText(section2)));
+            actions.MoveToElement(section2Menu).Perform();
+
+            IWebElement section3MenuItem = wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText(section3)));
+            section3MenuItem.Click();
+        }
+
+        public static void OpensSelectedProductDescription_WhenSelectProductByName(WebDriverWait wait, string productName)
+        {
+            WaitForElementToBeClickable(wait, By.LinkText(productName)).Click();
+        }
+
+        public static void AddPantsToCart_WhenClickOnAddToCartButton(WebDriverWait wait, IWebDriver driver, string size, string color, int quantity)
+        {
+            WaitForElementToBeClickable(wait, By.CssSelector($".swatch-attribute.size .swatch-option[aria-label='{size}']")).Click();
+            WaitForElementToBeClickable(wait, By.CssSelector($".swatch-attribute.color .swatch-option[aria-label='{color}']")).Click();
+            FillInputField(driver, By.Id("qty"), quantity.ToString());
+
+            var addToCartButton = driver.FindElement(By.CssSelector(".action.tocart"));
+            addToCartButton.Click();
+
+            wait.Until(ExpectedConditions.TextToBePresentInElement(addToCartButton, "Added"));
+            driver.Navigate().Back();
+        }
+
+        public static void VerifyCartIconUpdated(WebDriverWait wait, IWebDriver driver, int expectedCount)
+        {
+            WaitForElementToHaveText(wait, By.CssSelector(".counter-number"), expectedCount.ToString());
+
+            var updatedCartCounterText = driver.FindElement(By.CssSelector(".counter-number")).Text;
+            Assert.IsTrue(int.TryParse(updatedCartCounterText, out int itemCount) && itemCount > 0, "Cart counter value is not greater than 0.");
+        }
+
         public static string GetDisplayedNumberOfJackets(IWebDriver driver)
         {
             var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
@@ -85,6 +121,75 @@ namespace OnlineShopTests
             }
 
             throw new Exception("Failed to parse the number of displayed items.");
+        }
+
+        public static void FillsShippingDetails_WhenCheckoutPageIsOpened(WebDriverWait wait, IWebDriver driver, string email, string firstName, string lastName, string street, string streetLine2, string city, string region, string postalCode, string country, string phoneNumber)
+        {
+            IWebElement WaitForAndGetElement(By locator)
+            {
+                var element = WaitForElementToBeVisible(wait, locator);
+                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView(true);", element);
+                return element;
+            }
+
+            var emailInput = WaitForAndGetElement(By.CssSelector("input#customer-email"));
+            emailInput.Clear();
+            emailInput.SendKeys(email);
+
+            var firstNameInput = WaitForAndGetElement(By.Name("firstname"));
+            firstNameInput.Clear();
+            firstNameInput.SendKeys(firstName);
+
+            var lastNameInput = WaitForAndGetElement(By.Name("lastname"));
+            lastNameInput.Clear();
+            lastNameInput.SendKeys(lastName);
+
+            var streetInput = WaitForAndGetElement(By.Name("street[0]"));
+            streetInput.Clear();
+            streetInput.SendKeys(street);
+
+            var streetInputLine2 = WaitForAndGetElement(By.Name("street[1]"));
+            streetInputLine2.Clear();
+            streetInputLine2.SendKeys(streetLine2);
+
+            var cityInput = WaitForAndGetElement(By.Name("city"));
+            cityInput.Clear();
+            cityInput.SendKeys(city);
+
+            var regionDropdown = WaitForAndGetElement(By.Name("region_id"));
+            new SelectElement(regionDropdown).SelectByText(region);
+
+            var postalCodeInput = WaitForAndGetElement(By.Name("postcode"));
+            postalCodeInput.Clear();
+            postalCodeInput.SendKeys(postalCode);
+
+            var countryDropdown = WaitForAndGetElement(By.Name("country_id"));
+            new SelectElement(countryDropdown).SelectByText(country);
+
+            var phoneNumberInput = WaitForAndGetElement(By.Name("telephone"));
+            phoneNumberInput.Clear();
+            phoneNumberInput.SendKeys(phoneNumber);
+
+            var shippingMethodRadio = WaitForAndGetElement(By.CssSelector("input[value='flatrate_flatrate']"));
+            shippingMethodRadio.Click();
+
+            var continueButton = WaitForAndGetElement(By.CssSelector("[data-role='opc-continue']"));
+            continueButton.Click();
+        }
+
+        public static void CompletesTheOrder_WhenFilledShippingDetails(WebDriverWait wait, IWebDriver driver)
+        {
+            var placeOrderButton = TestUtils.WaitForElementToBeClickable(wait, By.CssSelector("#checkout-payment-method-load button.checkout"));
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView(true);", placeOrderButton);
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", placeOrderButton);
+
+            wait.Until(driver => driver.Url.Contains("/checkout/onepage/success/"));
+        }
+
+        public static void GetsSuccessMessage_WhenAssertOrderSuccess(WebDriverWait wait)
+        {
+            var successMessage = TestUtils.WaitForElementToBeVisible(wait, By.ClassName("page-title"));
+            Assert.IsTrue(successMessage.Displayed, "The success message is not displayed.");
         }
     }
 }
