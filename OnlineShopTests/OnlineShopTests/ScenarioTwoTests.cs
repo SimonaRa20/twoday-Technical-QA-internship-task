@@ -21,16 +21,16 @@ namespace OnlineShopTests
         [Test]
         public void CompleteOrderForWomenPants()
         {
-            TestUtils.NavigatesToSpecificSection_WhenClickOnMenuOptions(wait, driver, "Women", "Bottoms", "Pants");
+            TestUtils.NavigatesToSpecificSection_WhenClickOnMenuOptions(wait, driver, "Women", "Bottoms", "Pants", "https://magento.softwaretestingboard.com/women/bottoms-women/pants-women.html");
             SortPantsByPrice_WhenChangeSortValuePrice();
             SelectCheapestPants_WhenCLickOnFirstPantsOfList();
-            TestUtils.AddPantsToCart_WhenClickOnAddToCartButton(wait, driver, "28", "Black", 1);
+            TestUtils.AddProductToCart_WhenClickOnAddToCartButton(wait, driver, "28", "Black", 1);
             TestUtils.VerifyCartIconUpdated_WhenClickOnCartIcon(wait, driver, 1);
             TestUtils.OpensSelectedProductDescription_WhenSelectProductByName(wait, "Sylvia Capri");
-            TestUtils.AddPantsToCart_WhenClickOnAddToCartButton(wait, driver, "29", "Blue", 1);
+            TestUtils.AddProductToCart_WhenClickOnAddToCartButton(wait, driver, "29", "Blue", 1);
             TestUtils.VerifyCartIconUpdated_WhenClickOnCartIcon(wait, driver, 2);
             TestUtils.OpensSelectedProductDescription_WhenSelectProductByName(wait, "Emma Leggings");
-            TestUtils.AddPantsToCart_WhenClickOnAddToCartButton(wait, driver, "29", "Purple", 1);
+            TestUtils.AddProductToCart_WhenClickOnAddToCartButton(wait, driver, "29", "Purple", 1);
             TestUtils.VerifyCartIconUpdated_WhenClickOnCartIcon(wait, driver, 3);
             RemoveProductFromCart_WhenClickOnTrashIcon();
             TestUtils.VerifyCartIconUpdated_WhenClickOnCartIcon(wait, driver, 2);
@@ -58,24 +58,39 @@ namespace OnlineShopTests
 
         private void SelectCheapestPants_WhenCLickOnFirstPantsOfList()
         {
+            string beforeSelectUrl = driver.Url;
             var productList = wait.Until(driver => driver.FindElements(By.CssSelector(".product-item")));
             var cheapestProduct = productList.First();
             var selectProductLink = cheapestProduct.FindElement(By.CssSelector(".product-item-link"));
             selectProductLink.Click();
+            string afterSelectUrl = driver.Url;
+            Assert.AreNotEqual(beforeSelectUrl, afterSelectUrl);
         }
 
         private void RemoveProductFromCart_WhenClickOnTrashIcon()
         {
+            var beforeRemoveCartCounterText = driver.FindElement(By.CssSelector(".counter-number")).Text;
+            int beforeRemoveCount = int.Parse(beforeRemoveCartCounterText);
+
             var cartIcon = TestUtils.WaitForElementToBeClickable(wait, By.ClassName("minicart-wrapper"));
             cartIcon.Click();
 
             var cartItems = wait.Until(driver => driver.FindElements(By.CssSelector(".item.product.product-item")));
-            var productNameElement = cartItems[0].FindElement(By.CssSelector(".product-item-name a"));
             var removeButton = cartItems[0].FindElement(By.CssSelector(".action.delete"));
             removeButton.Click();
 
             var confirmButton = TestUtils.WaitForElementToBeClickable(wait, By.CssSelector(".action-primary.action-accept"));
             confirmButton.Click();
+
+            wait.Until(driver =>
+            {
+                var afterRemoveCartCounterText = driver.FindElement(By.CssSelector(".counter-number")).Text;
+                return int.TryParse(afterRemoveCartCounterText, out int afterRemoveCount) && afterRemoveCount < beforeRemoveCount;
+            });
+
+            var afterRemoveCartCounterTextFinal = driver.FindElement(By.CssSelector(".counter-number")).Text;
+            int afterRemoveCountFinal = int.Parse(afterRemoveCartCounterTextFinal);
+            Assert.AreEqual(beforeRemoveCount - 1, afterRemoveCountFinal, "The cart counter did not decrease after removing the product.");
         }
 
         private void ProceedToCheckout_WhenClickOnCheckoutButton()

@@ -36,7 +36,7 @@ namespace OnlineShopTests
             element.SendKeys(value);
         }
 
-        public static void NavigatesToSpecificSection_WhenClickOnMenuOptions(WebDriverWait wait, IWebDriver driver, string section1, string section2, string section3)
+        public static void NavigatesToSpecificSection_WhenClickOnMenuOptions(WebDriverWait wait, IWebDriver driver, string section1, string section2, string section3, string expectedUrl)
         {
             driver.Navigate().GoToUrl(BaseUrl);
             IWebElement section1Menu = wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText(section1)));
@@ -48,6 +48,10 @@ namespace OnlineShopTests
 
             IWebElement section3MenuItem = wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText(section3)));
             section3MenuItem.Click();
+
+            wait.Until(driver => driver.Url.Equals(expectedUrl, StringComparison.OrdinalIgnoreCase));
+            string currentUrl = driver.Url;
+            Assert.AreEqual(expectedUrl, currentUrl, $"The URL after navigating to {section1} > {section2} > {section3} did not match the expected URL.");
         }
 
         public static void OpensSelectedProductDescription_WhenSelectProductByName(WebDriverWait wait, string productName)
@@ -55,16 +59,21 @@ namespace OnlineShopTests
             WaitForElementToBeClickable(wait, By.LinkText(productName)).Click();
         }
 
-        public static void AddPantsToCart_WhenClickOnAddToCartButton(WebDriverWait wait, IWebDriver driver, string size, string color, int quantity)
+        public static void AddProductToCart_WhenClickOnAddToCartButton(WebDriverWait wait, IWebDriver driver, string size, string color, int quantity)
         {
             WaitForElementToBeClickable(wait, By.CssSelector($".swatch-attribute.size .swatch-option[aria-label='{size}']")).Click();
             WaitForElementToBeClickable(wait, By.CssSelector($".swatch-attribute.color .swatch-option[aria-label='{color}']")).Click();
             FillInputField(wait, By.Id("qty"), quantity.ToString());
 
             var addToCartButton = driver.FindElement(By.CssSelector(".action.tocart"));
+            string beforeAddButtonText = addToCartButton.Text;
             addToCartButton.Click();
 
             wait.Until(ExpectedConditions.TextToBePresentInElement(addToCartButton, "Added"));
+
+            string afterAddButtonText = addToCartButton.Text;
+            Assert.AreNotEqual(beforeAddButtonText, afterAddButtonText, "The button text did not change to 'Added' after clicking.");
+
             driver.Navigate().Back();
         }
 
