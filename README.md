@@ -2,7 +2,7 @@
 ## Technical QA internship task
 ### Online Shop Automated Test Suite
 
-This project is an automated test suite for an online shop (https://magento.softwaretestingboard.com/). The tests are designed to validate key functionalities such as product selection, adding items to the cart, and completing orders.
+This project is an automated test suite for an online shop (https://magento.softwaretestingboard.com/). The tests are designed to validate key functionalities such as product selection, adding items to the cart, and completing orders. The task was completed using **C#** with **Selenium**.
 
 ## Prerequisites
 
