@@ -39,14 +39,14 @@ namespace OnlineShopTests
         public static void NavigatesToSpecificSection_WhenClickOnMenuOptions(WebDriverWait wait, IWebDriver driver, string section1, string section2, string section3, string expectedUrl)
         {
             driver.Navigate().GoToUrl(BaseUrl);
-            IWebElement section1Menu = wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText(section1)));
+            IWebElement section1Menu = WaitForElementToBeClickable(wait, By.LinkText(section1));
             Actions actions = new Actions(driver);
             actions.MoveToElement(section1Menu).Perform();
 
-            IWebElement section2Menu = wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText(section2)));
+            IWebElement section2Menu = WaitForElementToBeClickable(wait, By.LinkText(section2));
             actions.MoveToElement(section2Menu).Perform();
 
-            IWebElement section3MenuItem = wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText(section3)));
+            IWebElement section3MenuItem = WaitForElementToBeClickable(wait, By.LinkText(section3));
             section3MenuItem.Click();
 
             wait.Until(driver => driver.Url.Equals(expectedUrl, StringComparison.OrdinalIgnoreCase));
